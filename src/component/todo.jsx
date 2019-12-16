@@ -1,44 +1,96 @@
 import React from 'react';
 import '../scss/todo.scss';
 
+import InputField from './inputfield';
+import ListItem from './list-item';
+import Button from './button';
+
 class Todo extends React.Component {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
-      value: 0,
-      ok: true
-    }
+      todoThings: []
+    };
   }
-  clickHandler = e => {
-    
+  addTodo = input => {
+    let inputValue = input;
+    if (input === '') {
+      return;
+    }
+    let newAry = this.state.todoThings.slice();
+    newAry.push({
+      text: input,
+      status: false,
+      id: Date.now()
+    });
+     this.changeState('todoThings', newAry)
+  };
+  deleteItem = id => {
+    let newAry = this.state.todoThings.filter(el => el.id != id);
+    this.changeState('todoThings', newAry)
+  };
+  changeStatus = id => {
+    let newAry = this.state.todoThings.slice().map(el => {
+      if (el.id === id) {
+        el.status = !el.status
+      }
+      return el
+    })
+    this.changeState('todoThings', newAry)
+  };
+  removeAllDone = () => {
+    let newAry = this.state.todoThings.filter(el => !el.status);
+    this.changeState('todoThings', newAry)
+  };
+  modifyTodo = (id, input='') => {
+    let newAry = this.state.todoThings.slice().map(el => {
+      if (el.id === id) {
+        el.text = input
+      }
+      return el
+    })
+    this.changeState('todoThings', newAry)
+  }
+  changeState = (attr, value) => {
+    this.setState(state => ({
+      [attr]: value
+    }))
   }
   render() {
+    const allThings = this.state.todoThings.map(el => (
+      <ListItem
+        key={el.id}
+        todo={el}
+        delete={() => this.deleteItem(el.id)}
+        changeStatus={() => this.changeStatus(el.id)}
+        modifyTodo={i => this.modifyTodo(el.id, i)}
+      />
+    ));
+    const completed = this.state.todoThings
+      .filter(el => el.status)
+      .map(el => (
+        <ListItem
+          key={el.id}
+          todo={el}
+          delete={() => this.deleteItem(el.id)}
+          changeStatus={() => this.changeStatus(el.id)}
+          modifyTodo={i => this.modifyTodo(el.id, i)}
+        />
+      ));
+    const undone = this.state.todoThings
+      .filter(el => !el.status)
+      .map(el => (
+        <ListItem
+          key={el.id}
+          todo={el}
+          delete={() => this.deleteItem(el.id)}
+          changeStatus={() => this.changeStatus(el.id)}
+          modifyTodo={i => this.modifyTodo(el.id, i)}
+        />
+      ));
     return (
       <div className="container pt-5">
-        <div className="input-group mb-3">
-          <div className="input-group-prepend">
-            <label className="input-group-text" htmlFor="todo">
-              代辦事項
-            </label>
-          </div>
-          <input
-            type="text"
-            id="todo"
-            name="todo"
-            className="form-control"
-            value="todo thing"
-          />
-          <div className="input-group-append">
-            <button
-              className="btn btn-outline-secondary"
-              type="button"
-              id="button-addon2"
-              onClick={this.clickHandler}
-            >
-              新增
-            </button>
-          </div>
-        </div>
+        <InputField onClick={i => this.addTodo(i)} />
         <section>
           <ul className="nav nav-tabs" role="tablist">
             <li className="nav-item">
@@ -72,34 +124,27 @@ class Todo extends React.Component {
               </a>
             </li>
           </ul>
-          <div className="tab-content border border-top-0 mb-3" id="myTabContent">
-            <div className="tab-pane fade show active" id="entire" role="tabpanel">
-              <div className="d-flex justify-content-between align-items-center py-2 px-3">
-                <input type="checkbox" name="" id="" />
-                <p className="flex-fill mb-0 pl-3 text-left">all things</p>
-                <a href="#">delete</a>
-              </div>
+          <div
+            className="tab-content border border-top-0 mb-3"
+            id="myTabContent"
+          >
+            <div
+              className="tab-pane fade show active"
+              id="entire"
+              role="tabpanel"
+            >
+              {allThings}
             </div>
             <div className="tab-pane fade" id="profile" role="tabpanel">
-              <div className="d-flex justify-content-between align-items-center py-2 px-3">
-                <input type="checkbox" name="" id="" />
-                <p className="flex-fill mb-0 pl-3 text-left">somethig todo</p>
-                <a href="#">delete</a>
-              </div>
+              {undone}
             </div>
             <div className="tab-pane fade" id="contact" role="tabpanel">
-              <div className="d-flex justify-content-between align-items-center py-2 px-3">
-                <input type="checkbox" name="" id="" />
-                <p className="flex-fill mb-0 pl-3 text-left">somethig finish</p>
-                <a href="#">delete</a>
-              </div>
+              {completed}
             </div>
           </div>
-          <footer className="text-right">
-            <a href="#" className="btn btn-primary">
-              清除已完成的任務
-            </a>
-          </footer>
+          <div className="text-right">
+            <Button text="清除已完成任務" onClick={this.removeAllDone}/>
+          </div>
         </section>
       </div>
     );
